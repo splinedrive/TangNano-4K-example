@@ -2,7 +2,7 @@
 // =  Copyright (C) 2014-2020 Gowin Semiconductor Technology Co.,Ltd.
 // =                     All rights reserved.
 // ====================================================================================
-// 
+//
 //  __      __      __
 //  \ \    /  \    / /   [File name   ] video_top.v
 //   \ \  / /\ \  / /    [Description ] Video demo
@@ -15,10 +15,13 @@
 // ----------------------------------------------------------------------------------
 // Ver:    |  Author    | Mod. Date    | Changes Made:
 // ----------------------------------------------------------------------------------
-// V1.0    | Caojie     | 11/22/19     | Initial version 
+// V1.0    | Caojie     | 11/22/19     | Initial version
 // ----------------------------------------------------------------------------------
 // ==============0ooo===================================================0ooo===========
-  
+
+/* modified by Hirosh Dabui 2021 with
+ * opensource hdmi device module from https://github.com/splinedrive/my_hdmi_device
+ */
 module video_top
 (
     input             I_clk           , //27Mhz
@@ -40,7 +43,7 @@ module video_top
     output            O_tmds_clk_p    ,
     output            O_tmds_clk_n    ,
     output     [2:0]  O_tmds_data_p   ,//{r,g,b}
-    output     [2:0]  O_tmds_data_n   
+    output     [2:0]  O_tmds_data_n
 );
 
 //==================================================
@@ -75,13 +78,13 @@ wire [15:0] ch0_vfb_data_in;
 wire        syn_off0_re;  // ofifo read enable signal
 wire        syn_off0_vs;
 wire        syn_off0_hs;
-            
+
 wire        off0_syn_de  ;
 wire [15:0] off0_syn_data;
 
 //-------------------------------------
 //Hyperram
-wire        dma_clk  ; 
+wire        dma_clk  ;
 
 wire        memory_clk;
 wire        mem_pll_lock  ;
@@ -102,7 +105,7 @@ wire          init_calib    ;
 wire        rgb_vs     ;
 wire        rgb_hs     ;
 wire        rgb_de     ;
-wire [23:0] rgb_data   ;  
+wire [23:0] rgb_data   ;
 
 //------------------------------------
 //HDMI TX
@@ -139,25 +142,25 @@ assign  XCLK = clk_12M;
 testpattern testpattern_inst
 (
     .I_pxl_clk   (I_clk              ),//pixel clock
-    .I_rst_n     (I_rst_n            ),//low active 
+    .I_rst_n     (I_rst_n            ),//low active
     .I_mode      ({1'b0,cnt_vs[7:6]} ),//data select
     .I_single_r  (8'd0               ),
     .I_single_g  (8'd255             ),
-    .I_single_b  (8'd0               ),                  //800x600    //1024x768   //1280x720    
-    .I_h_total   (16'd1650           ),//hor total time  // 16'd1056  // 16'd1344  // 16'd1650  
-    .I_h_sync    (16'd40             ),//hor sync time   // 16'd128   // 16'd136   // 16'd40    
-    .I_h_bporch  (16'd220            ),//hor back porch  // 16'd88    // 16'd160   // 16'd220   
-    .I_h_res     (16'd640            ),//hor resolution  // 16'd800   // 16'd1024  // 16'd1280  
-    .I_v_total   (16'd750            ),//ver total time  // 16'd628   // 16'd806   // 16'd750    
-    .I_v_sync    (16'd5              ),//ver sync time   // 16'd4     // 16'd6     // 16'd5     
-    .I_v_bporch  (16'd20             ),//ver back porch  // 16'd23    // 16'd29    // 16'd20    
-    .I_v_res     (16'd480            ),//ver resolution  // 16'd600   // 16'd768   // 16'd720    
+    .I_single_b  (8'd0               ),                  //800x600    //1024x768   //1280x720
+    .I_h_total   (16'd1650           ),//hor total time  // 16'd1056  // 16'd1344  // 16'd1650
+    .I_h_sync    (16'd40             ),//hor sync time   // 16'd128   // 16'd136   // 16'd40
+    .I_h_bporch  (16'd220            ),//hor back porch  // 16'd88    // 16'd160   // 16'd220
+    .I_h_res     (16'd640            ),//hor resolution  // 16'd800   // 16'd1024  // 16'd1280
+    .I_v_total   (16'd750            ),//ver total time  // 16'd628   // 16'd806   // 16'd750
+    .I_v_sync    (16'd5              ),//ver sync time   // 16'd4     // 16'd6     // 16'd5
+    .I_v_bporch  (16'd20             ),//ver back porch  // 16'd23    // 16'd29    // 16'd20
+    .I_v_res     (16'd480            ),//ver resolution  // 16'd600   // 16'd768   // 16'd720
     .I_hs_pol    (1'b1               ),//HS polarity , 0:negetive ploarity，1：positive polarity
     .I_vs_pol    (1'b1               ),//VS polarity , 0:negetive ploarity，1：positive polarity
-    .O_de        (tp0_de_in          ),   
+    .O_de        (tp0_de_in          ),
     .O_hs        (tp0_hs_in          ),
     .O_vs        (tp0_vs_in          ),
-    .O_data_r    (tp0_data_r         ),   
+    .O_data_r    (tp0_data_r         ),
     .O_data_g    (tp0_data_g         ),
     .O_data_b    (tp0_data_b         )
 );
@@ -177,7 +180,7 @@ begin
         cnt_vs<=cnt_vs+1;
     else
         cnt_vs<=cnt_vs;
-end 
+end
 
 //==============================================================================
 OV2640_Controller u_OV2640_Controller
@@ -215,33 +218,33 @@ end
 assign cam_data = {PIXDATA[9:5],PIXDATA[9:4],PIXDATA[9:5]}; //RAW10
 
 //==============================================
-//data width 16bit   
-    assign ch0_vfb_clk_in  = (cnt_vs <= 10'h1ff) ? I_clk : PIXCLK;       
+//data width 16bit
+    assign ch0_vfb_clk_in  = (cnt_vs <= 10'h1ff) ? I_clk : PIXCLK;
     assign ch0_vfb_vs_in   = (cnt_vs <= 10'h1ff) ? ~tp0_vs_in : VSYNC;  //negative
-    assign ch0_vfb_de_in   = (cnt_vs <= 10'h1ff) ? tp0_de_in : HREF;//hcnt;  
+    assign ch0_vfb_de_in   = (cnt_vs <= 10'h1ff) ? tp0_de_in : HREF;//hcnt;
     assign ch0_vfb_data_in = (cnt_vs <= 10'h1ff) ? {tp0_data_r[7:3],tp0_data_g[7:2],tp0_data_b[7:3]} : cam_data; // RGB565
-  
-    // assign ch0_vfb_clk_in  = PIXCLK;       
+
+    // assign ch0_vfb_clk_in  = PIXCLK;
     // assign ch0_vfb_vs_in   = VSYNC;  //negative
-    // assign ch0_vfb_de_in   = HREF;//hcnt;  
+    // assign ch0_vfb_de_in   = HREF;//hcnt;
     // assign ch0_vfb_data_in = cam_data; // RGB565
 
 
 //=====================================================
-//SRAM 控制模块 
+//SRAM 控制模块
 Video_Frame_Buffer_Top Video_Frame_Buffer_Top_inst
-( 
+(
     .I_rst_n            (init_calib       ),//rst_n            ),
     .I_dma_clk          (dma_clk          ),   //sram_clk         ),
     .I_wr_halt          (1'd0             ), //1:halt,  0:no halt
     .I_rd_halt          (1'd0             ), //1:halt,  0:no halt
-    // video data input           
+    // video data input
     .I_vin0_clk         (ch0_vfb_clk_in   ),
     .I_vin0_vs_n        (ch0_vfb_vs_in    ),
     .I_vin0_de          (ch0_vfb_de_in    ),
     .I_vin0_data        (ch0_vfb_data_in  ),
     .O_vin0_fifo_full   (                 ),
-    // video data output          
+    // video data output
     .I_vout0_clk        (pix_clk          ),
     .I_vout0_vs_n       (~syn_off0_vs     ),
     .I_vout0_de         (syn_off0_re      ),
@@ -257,7 +260,7 @@ Video_Frame_Buffer_Top Video_Frame_Buffer_Top_inst
     .I_rd_data_valid    (rd_data_valid    ),
     .I_rd_data          (rd_data          ),//[DATA_WIDTH-1:0]
     .I_init_calib       (init_calib       )
-); 
+);
 
 //================================================
 //HyperRAM ip
@@ -289,34 +292,34 @@ HyperRAM_Memory_Interface_Top HyperRAM_Memory_Interface_Top_inst
     .clk_out        (dma_clk        ),
     .data_mask      (data_mask      ),
     .init_calib     (init_calib      )
-); 
+);
 
 //================================================
 wire out_de;
 syn_gen syn_gen_inst
-(                                   
-    .I_pxl_clk   (pix_clk         ),//40MHz      //65MHz      //74.25MHz    
-    .I_rst_n     (hdmi_rst_n      ),//800x600    //1024x768   //1280x720       
-    .I_h_total   (16'd1650        ),// 16'd1056  // 16'd1344  // 16'd1650    
-    .I_h_sync    (16'd40          ),// 16'd128   // 16'd136   // 16'd40     
-    .I_h_bporch  (16'd220         ),// 16'd88    // 16'd160   // 16'd220     
-    .I_h_res     (16'd1280        ),// 16'd800   // 16'd1024  // 16'd1280    
-    .I_v_total   (16'd750         ),// 16'd628   // 16'd806   // 16'd750      
-    .I_v_sync    (16'd5           ),// 16'd4     // 16'd6     // 16'd5        
-    .I_v_bporch  (16'd20          ),// 16'd23    // 16'd29    // 16'd20        
-    .I_v_res     (16'd720         ),// 16'd600   // 16'd768   // 16'd720      
+(
+    .I_pxl_clk   (pix_clk         ),//40MHz      //65MHz      //74.25MHz
+    .I_rst_n     (hdmi_rst_n      ),//800x600    //1024x768   //1280x720
+    .I_h_total   (16'd1650        ),// 16'd1056  // 16'd1344  // 16'd1650
+    .I_h_sync    (16'd40          ),// 16'd128   // 16'd136   // 16'd40
+    .I_h_bporch  (16'd220         ),// 16'd88    // 16'd160   // 16'd220
+    .I_h_res     (16'd1280        ),// 16'd800   // 16'd1024  // 16'd1280
+    .I_v_total   (16'd750         ),// 16'd628   // 16'd806   // 16'd750
+    .I_v_sync    (16'd5           ),// 16'd4     // 16'd6     // 16'd5
+    .I_v_bporch  (16'd20          ),// 16'd23    // 16'd29    // 16'd20
+    .I_v_res     (16'd720         ),// 16'd600   // 16'd768   // 16'd720
     .I_rd_hres   (16'd640         ),
     .I_rd_vres   (16'd480         ),
     .I_hs_pol    (1'b1            ),//HS polarity , 0:负极性，1：正极性
     .I_vs_pol    (1'b1            ),//VS polarity , 0:负极性，1：正极性
     .O_rden      (syn_off0_re     ),
-    .O_de        (out_de          ),   
+    .O_de        (out_de          ),
     .O_hs        (syn_off0_hs     ),
     .O_vs        (syn_off0_vs     )
 );
 
 localparam N = 5; //delay N clocks
-                          
+
 reg  [N-1:0]  Pout_hs_dn   ;
 reg  [N-1:0]  Pout_vs_dn   ;
 reg  [N-1:0]  Pout_de_dn   ;
@@ -324,16 +327,16 @@ reg  [N-1:0]  Pout_de_dn   ;
 always@(posedge pix_clk or negedge hdmi_rst_n)
 begin
     if(!hdmi_rst_n)
-        begin                          
+        begin
             Pout_hs_dn  <= {N{1'b1}};
-            Pout_vs_dn  <= {N{1'b1}}; 
-            Pout_de_dn  <= {N{1'b0}}; 
+            Pout_vs_dn  <= {N{1'b1}};
+            Pout_de_dn  <= {N{1'b0}};
         end
-    else 
-        begin                          
+    else
+        begin
             Pout_hs_dn  <= {Pout_hs_dn[N-2:0],syn_off0_hs};
-            Pout_vs_dn  <= {Pout_vs_dn[N-2:0],syn_off0_vs}; 
-            Pout_de_dn  <= {Pout_de_dn[N-2:0],out_de}; 
+            Pout_vs_dn  <= {Pout_vs_dn[N-2:0],syn_off0_vs};
+            Pout_de_dn  <= {Pout_de_dn[N-2:0],out_de};
         end
 end
 
@@ -346,8 +349,8 @@ assign rgb_de      = Pout_de_dn[4];//off0_syn_de;
 
 
 TMDS_PLLVR TMDS_PLLVR_inst
-(.clkin     (I_clk     )     //input clk 
-,.clkout    (serial_clk)     //output clk 
+(.clkin     (I_clk     )     //input clk
+,.clkout    (serial_clk)     //output clk
 ,.clkoutd   (clk_12M   ) //output clkoutd
 ,.lock      (pll_lock  )     //output lock
 );
@@ -362,22 +365,57 @@ CLKDIV u_clkdiv
 );
 defparam u_clkdiv.DIV_MODE="5";
 
+
+/*
+ * taken hdmi_device from
+ * https://github.com/splinedrive/my_hdmi_device
+ */
+wire [1:0] out_tmds_red;
+wire [1:0] out_tmds_blue;
+wire [1:0] out_tmds_green;
+wire [1:0] out_tmds_clk;
+
+hdmi_device #(.DDR_ENABLED(1'b1)) hdmi_device_i(
+                .pclk         (pix_clk        ),
+                .tmds_clk     (serial_clk     ),
+
+                .in_vga_red      ( rgb_data[23:16]),
+                .in_vga_green    ( rgb_data[15: 8]),
+                .in_vga_blue     ( rgb_data[ 7: 0]),
+
+                .in_vga_blank    ( !rgb_de        ),
+                .in_vga_vsync    ( rgb_vs         ),
+                .in_vga_hsync    ( rgb_hs         ),
+
+                .out_tmds_red    ( out_tmds_red   ),
+                .out_tmds_green  ( out_tmds_green  ),
+                .out_tmds_blue   ( out_tmds_blue ),
+                .out_tmds_clk    ( out_tmds_clk   )
+            );
+
+  // DDR
+ ODDR red_ddr_i   ( .CLK(serial_clk), .D0(out_tmds_red  [0]   )   , .D1(out_tmds_red     [1] )     , .Q0(O_tmds_data_p     [2] ));
+ ODDR blue_ddr_i  ( .CLK(serial_clk), .D0(out_tmds_blue [0]   )   , .D1(out_tmds_blue    [1] )     , .Q0(O_tmds_data_p     [0] ));
+ ODDR green_ddr_i ( .CLK(serial_clk), .D0(out_tmds_green[0]   )   , .D1(out_tmds_green   [1] )     , .Q0(O_tmds_data_p     [1] ));
+ ODDR clk_ddr_i   ( .CLK(serial_clk), .D0(out_tmds_clk  [0]   )   , .D1(out_tmds_clk     [1] )     , .Q0(O_tmds_clk_p          ));
+/*
 DVI_TX_Top DVI_TX_Top_inst
 (
     .I_rst_n       (hdmi_rst_n   ),  //asynchronous reset, low active
     .I_serial_clk  (serial_clk    ),
     .I_rgb_clk     (pix_clk       ),  //pixel clock
-    .I_rgb_vs      (rgb_vs        ), 
-    .I_rgb_hs      (rgb_hs        ),    
-    .I_rgb_de      (rgb_de        ), 
-    .I_rgb_r       (rgb_data[23:16]    ),  
-    .I_rgb_g       (rgb_data[15: 8]    ),  
-    .I_rgb_b       (rgb_data[ 7: 0]    ),  
+    .I_rgb_vs      (rgb_vs        ),
+    .I_rgb_hs      (rgb_hs        ),
+    .I_rgb_de      (rgb_de        ),
+    .I_rgb_r       (rgb_data[23:16]    ),
+    .I_rgb_g       (rgb_data[15: 8]    ),
+    .I_rgb_b       (rgb_data[ 7: 0]    ),
     .O_tmds_clk_p  (O_tmds_clk_p  ),
     .O_tmds_clk_n  (O_tmds_clk_n  ),
     .O_tmds_data_p (O_tmds_data_p ),  //{r,g,b}
     .O_tmds_data_n (O_tmds_data_n )
 );
+*/
 
 
 
